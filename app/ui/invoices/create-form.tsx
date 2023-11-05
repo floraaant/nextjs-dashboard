@@ -11,10 +11,17 @@ import {
 import { Button } from '../button';
 import { createInvoice } from '@/app/lib/actions';
 import { useFormState } from 'react-dom';
+import { useState } from 'react';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(createInvoice, initialState);
+  const [amount, setAmount] = useState<string | null>("");
+
+  function changeSuggestion(event: React.MouseEvent<HTMLParagraphElement>){
+    const content = event.currentTarget.textContent;
+    setAmount(content);
+  }
   return (
     <form action={dispatch} >
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
@@ -53,6 +60,8 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               ))}
             </div>
           ) : null}
+          <p className="mb-2 py-2 block text-xs font-light">Can't find your customer? <Link href="../customers/create" className='underline text-blue-700'>Create one here!</Link></p>
+
         </div>
 
         {/* Invoice Amount */}
@@ -63,6 +72,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
           <div className="relative mt-2 rounded-md">
             <div className="relative">
               <input
+                value={amount || ''} 
                 id="amount"
                 name="amount"
                 type="number"
@@ -71,8 +81,18 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 required
                 aria-describedby="amount-error"
+                onChange={(e) => setAmount(e.target.value)}
               />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <div className='flex row-auto gap-2'>
+            <p className="py-2 px-2 my-2 text-xs w-fit ">Suggestions:</p>
+              <p className="py-2 px-2 my-2 rounded-md text-xs w-fit bg-white border border-gray-200 cursor-pointer" onClick={changeSuggestion}>100</p>
+              <p className="py-2 px-2 my-2 rounded-md text-xs w-fit bg-white border border-gray-200 cursor-pointer" onClick={changeSuggestion}>200</p>
+              <p className="py-2 px-2 my-2 rounded-md text-xs w-fit bg-white border border-gray-200 cursor-pointer" onClick={changeSuggestion}>300</p>
+              <p className="py-2 px-2 my-2 rounded-md text-xs w-fit bg-white border border-gray-200 cursor-pointer" onClick={changeSuggestion}>500</p>
+              <p className="py-2 px-2 my-2 rounded-md text-xs w-fit bg-white border border-gray-200 cursor-pointer" onClick={changeSuggestion}>750</p>
+              <p className="py-2 px-2 my-2 rounded-md text-xs w-fit bg-white border border-gray-200 cursor-pointer" onClick={changeSuggestion}>1000</p>
             </div>
           </div>
           {state.errors?.amount ? (

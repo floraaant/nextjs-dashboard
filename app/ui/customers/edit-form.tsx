@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { updateCustomer } from '@/app/lib/actions';
 import { useFormState } from 'react-dom';
-
+import Image from 'next/image';
 
 export default function EditCustomerForm({
     customer,
@@ -24,7 +24,6 @@ export default function EditCustomerForm({
     return (
         <form action={dispatch}>
             <div className="rounded-md bg-gray-50 p-4 md:p-6">
-
                 {/* Customer Name */}
                 <div className="mb-4">
                     <label htmlFor="name" className="mb-2 block text-sm font-medium">
@@ -38,8 +37,13 @@ export default function EditCustomerForm({
                             aria-describedby="name-error"
                             defaultValue={customer.name}
                         />
-                        <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-
+                        <Image
+                            src={customer.image_url}
+                            className="mr-2 rounded-full pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 "
+                            alt={`${customer.name}'s profile picture`}
+                            width={18}
+                            height={18}
+                        />
                     </div>
                     {state.errors?.name ? (
                         <div
