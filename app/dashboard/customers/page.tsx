@@ -1,5 +1,6 @@
 import Table from '@/app/ui/customers/table';
 import { Metadata } from 'next';
+import { CreateCustomer } from '@/app/ui/customers/buttons';
 import { fetchCustomersPages, fetchFilteredCustomers } from '@/app/lib/data';
 import { CustomersTableSkeleton } from '@/app/ui/skeletons';
 import { Suspense } from 'react';
@@ -35,6 +36,7 @@ export default async function Page({
       </div>
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
         <Search placeholder="Search customers..." />
+        <CreateCustomer />
       </div>
       <Suspense key={query + currentPage} fallback={<CustomersTableSkeleton />}>
         <Table query={query} currentPage={currentPage} />

@@ -7,6 +7,7 @@ import {
   LatestInvoiceRaw,
   User,
   Revenue,
+  CustomerForm,
 } from "./definitions";
 import { formatCurrency } from "./utils";
 import { unstable_noStore as noStore } from "next/cache";
@@ -79,6 +80,7 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 5;
+
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number
@@ -163,6 +165,26 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
+export async function fetchOnlyCustomers() {
+  try {
+    const data = await sql<CustomerField>`
+		SELECT
+		  customers.id,
+		  customers.name,
+		  customers.email,
+		  customers.image_url
+      FROM customers
+      GROUP BY customers.id, customers.name, customers.email, customers.image_url
+    `;
+
+    const customers = data.rows;
+    return customers;
+  } catch (err) {
+    console.error("Database Error:", err);
+    throw new Error("Failed to fetch all customers.");
+  }
+}
+
 export async function fetchCustomers() {
   try {
     const data = await sql<CustomerField>`
@@ -240,6 +262,28 @@ export async function fetchCustomersPages(query: string) {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch total number of invoices.");
+  }
+}
+
+export async function fetchCustomerById(id: string) {
+  noStore();
+  try {
+    const data = await sql<CustomerForm>`
+      SELECT
+        customers.id,
+        customers.name,
+        customers.email,
+        customers.image_url
+      FROM customers
+      WHERE customers.id = ${id};
+    `;
+
+    const customer = data.rows;
+
+    return customer;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch customer.");
   }
 }
 

@@ -1,27 +1,51 @@
-'use server';
+"use server";
 
-import { sql } from '@vercel/postgres';
-import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { signIn } from '@/auth';
+import { sql } from "@vercel/postgres";
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { signIn } from "@/auth";
 
 const InvoiceSchema = z.object({
   id: z.string(),
   customerId: z.string({
-    invalid_type_error: 'Please select a customer.',
+    invalid_type_error: "Please select a customer.",
   }),
   amount: z.coerce
     .number()
-    .gt(0, { message: 'Please enter an amount greater than $0.' }),
-  status: z.enum(['pending', 'paid'], {
-    invalid_type_error: 'Please select an invoice status.',
+    .gt(0, { message: "Please enter an amount greater than $0." }),
+  status: z.enum(["pending", "paid"], {
+    invalid_type_error: "Please select an invoice status.",
   }),
   date: z.string(),
 });
 
-const CreateInvoice = InvoiceSchema.omit({id: true, date: true});
+const CustomerSchema = z.object({
+  id: z.string(),
+  name: z.string({
+    invalid_type_error: "Please enter a name.",
+  }),
+  email: z.string({
+    invalid_type_error: "Please enter an email.",
+  }),
+  image_url: z.string({
+    invalid_type_error: "Please select an image.",
+  }),
+});
+
+const CreateInvoice = InvoiceSchema.omit({ id: true, date: true });
 const UpdateInvoice = InvoiceSchema.omit({ date: true, id: true });
+const CreateCustomer = CustomerSchema.omit({ id: true });
+const UpdateCustomer = CustomerSchema.omit({ id: true });
+
+export type cusState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    image_url?: string[];
+  };
+  message?: string | null;
+};
 
 export type State = {
   errors?: {
@@ -34,21 +58,21 @@ export type State = {
 
 export async function createInvoice(prevState: State, formData: FormData) {
   const validatedFields = CreateInvoice.safeParse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
   });
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Create Invoice.',
+      message: "Missing Fields. Failed to Create Invoice.",
     };
   }
- 
+
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
-  const date = new Date().toISOString().split('T')[0];
- 
+  const date = new Date().toISOString().split("T")[0];
+
   try {
     await sql`
       INSERT INTO invoices (customer_id, amount, status, date)
@@ -56,66 +80,144 @@ export async function createInvoice(prevState: State, formData: FormData) {
     `;
   } catch (error) {
     return {
-      message: 'Database Error: Failed to Create Invoice.',
+      message: "Database Error: Failed to Create Invoice.",
     };
   }
- 
-  revalidatePath('/dashboard/invoices');
-  redirect('/dashboard/invoices');
+
+  revalidatePath("/dashboard/invoices");
+  redirect("/dashboard/invoices");
 }
 
-
-export async function updateInvoice(id: string, prevState: State, formData: FormData) {
-
+export async function updateInvoice(
+  id: string,
+  prevState: State,
+  formData: FormData
+) {
   const validatedFields = UpdateInvoice.safeParse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
   });
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Update Invoice.',
+      message: "Missing Fields. Failed to Update Invoice.",
     };
   }
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
-   
-    try {
-      await sql`
+
+  try {
+    await sql`
           UPDATE invoices
           SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
           WHERE id = ${id}
         `;
-    } catch (error) {
-      return { message: 'Database Error: Failed to Update Invoice.' };
-    }
-   
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
+  } catch (error) {
+    return { message: "Database Error: Failed to Update Invoice." };
   }
-  
 
-  export async function deleteInvoice(id: string) {
-    try {
-      await sql`DELETE FROM invoices WHERE id = ${id}`;
-      revalidatePath('/dashboard/invoices');
-      return { message: 'Deleted Invoice.' };
-    } catch (error) {
-      return { message: 'Database Error: Failed to Delete Invoice.' };
-    }
+  revalidatePath("/dashboard/invoices");
+  redirect("/dashboard/invoices");
+}
+
+export async function deleteInvoice(id: string) {
+  try {
+    await sql`DELETE FROM invoices WHERE id = ${id}`;
+    revalidatePath("/dashboard/invoices");
+    return { message: "Deleted Invoice." };
+  } catch (error) {
+    return { message: "Database Error: Failed to Delete Invoice." };
   }
-  
-  export async function authenticate(
-    prevState: string | undefined,
-    formData: FormData,
-  ) {
-    try {
-      await signIn('credentials', Object.fromEntries(formData));
-    } catch (error) {
-      if ((error as Error).message.includes('CredentialsSignin')) {
-        return 'CredentialSignin';
-      }
-      throw error;
+}
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData
+) {
+  try {
+    await signIn("credentials", Object.fromEntries(formData));
+  } catch (error) {
+    if ((error as Error).message.includes("CredentialsSignin")) {
+      return "CredentialSignin";
     }
+    throw error;
   }
+}
+
+export async function createCustomer(prevState: cusState, formData: FormData) {
+  const validatedFields = CreateCustomer.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    image_url: formData.get("image_url"),
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Create Customer.",
+    };
+  }
+
+  const { name, email, image_url } = validatedFields.data;
+  const folderImage = "/customers/" + image_url;
+  try {
+    await sql`
+        INSERT INTO customers (name, email, image_url)
+        VALUES (${name}, ${email}, ${folderImage})
+      `;
+  } catch (error) {
+    return {
+      message: "Database Error: Failed to Create Customer.",
+    };
+  }
+
+  revalidatePath("/dashboard/customers");
+  redirect("/dashboard/customers");
+}
+
+export async function updateCustomer(
+  id: string,
+  prevState: cusState,
+  formData: FormData
+) {
+  const validatedFields = UpdateCustomer.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    image_url: formData.get("image_url"),
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Update Customer.",
+    };
+  }
+
+  const { name, email, image_url } = validatedFields.data;
+
+  try {
+    await sql`
+            UPDATE customers
+            SET 
+            name = ${name}, email = ${email}, image_url = ${image_url}
+            WHERE id = ${id}
+          `;
+  } catch (error) {
+    return { message: "Database Error: Failed to Update Customer." };
+  }
+
+  revalidatePath("/dashboard/customers");
+  redirect("/dashboard/customers");
+}
+
+export async function deleteCustomer(id: string) {
+  try {
+    await sql`DELETE FROM customers WHERE id = ${id}`;
+    await sql`DELETE FROM invoices WHERE customer_id = ${id}`;
+    revalidatePath("/dashboard/customers");
+    return {
+      message: "Deleted customer and invoices linked to this customer.",
+    };
+  } catch (error) {
+    return { message: "Database Error: Failed to Delete Customer." };
+  }
+}

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { CustomersTable, FormattedCustomersTable } from '@/app/lib/definitions';
 import { fetchFilteredCustomers } from '@/app/lib/data';
+import { DeleteCustomer, UpdateCustomer } from './buttons';
 
 export default async function CustomersTable({
   query,
@@ -27,7 +28,7 @@ export default async function CustomersTable({
                       <div className="flex items-center gap-3">
                         <Image
                           src={customer.image_url}
-                          className="rounded-full"
+                          className="mr-2 rounded-full"
                           alt={`${customer.name}'s profile picture`}
                           width={28}
                           height={28}
@@ -80,7 +81,7 @@ export default async function CustomersTable({
             <tbody className="divide-y divide-gray-200 text-gray-900">
               {customers.map((customer) => (
                 <tr key={customer.id} className="group">
-                  <td className="whitespace-nowrap bg-white py-5 pl-4 pr-3 text-sm text-black group-first-of-type:rounded-md group-last-of-type:rounded-md sm:pl-6">
+                  <td className="whitespace-nowrap bg-white py-4 pl-4 pr-3 text-sm text-black group-first-of-type:rounded-md group-last-of-type:rounded-md sm:pl-6">
                     <div className="flex items-center gap-3">
                       <Image
                         src={customer.image_url}
@@ -92,17 +93,23 @@ export default async function CustomersTable({
                       <p>{customer.name}</p>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
+                  <td className="whitespace-nowrap bg-white px-4 py-4 text-sm">
                     {customer.email}
                   </td>
-                  <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
+                  <td className="whitespace-nowrap bg-white px-4 py-4 text-sm">
                     {customer.total_invoices}
                   </td>
-                  <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
+                  <td className="whitespace-nowrap bg-white px-4 py-4 text-sm">
                     {customer.total_pending}
                   </td>
-                  <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
+                  <td className="whitespace-nowrap bg-white px-4 py-4 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
                     {customer.total_paid}
+                  </td>
+                  <td className="whitespace-nowrap bg-white px-4 py-4 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
+                  <div className="flex justify-end gap-3">
+                      <UpdateCustomer id={customer.id} />
+                      <DeleteCustomer id={customer.id} />
+                    </div>
                   </td>
                 </tr>
               ))}
