@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { lusitana } from '@/app/ui/fonts';
-import InvoicesTable from '@/app/ui/logs/table';
-import LogsTable from '@/app/ui/invoices/table';
+import LogsTable from '@/app/ui/logs/table';
 
 
 export const metadata: Metadata = {
